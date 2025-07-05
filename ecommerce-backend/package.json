@@ -1,0 +1,21 @@
+{
+  "name": "ecommerce-backend",
+  "version": "1.0.0",
+  "description": "E-commerce backend API built with Express.js",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "ecommerce",
+    "api",
+    "express",
+    "nodejs"
+  ],
+  "author": "TotragoolDev",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
