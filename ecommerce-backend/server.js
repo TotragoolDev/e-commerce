@@ -7,6 +7,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 // เพิ่มหลัง require statements
 const { prisma, connectDatabase, getDatabaseStats } = require('./src/config/database');
+const authRoutes = require('./src/routes/auth.routes');
 
 const app = express();
 
@@ -196,21 +197,7 @@ app.get('/api/test-rate-limit', authLimiter, (req, res) => {
   });
 });
 
-app.use((err, req, res, next) => {
-  console.error('Error:', err.message);
-  
-  if (err.message.includes('CORS')) {
-    return res.status(403).json({
-      error: 'CORS Error',
-      message: 'Origin not allowed by CORS policy'
-    });
-  }
-  
-  res.status(err.status || 500).json({
-    error: err.name || 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong!'
-  });
-});
+app.use('/api/auth', authRoutes);
 
 // Database Test Endpoint
 app.get('/api/db-test', async (req, res) => {

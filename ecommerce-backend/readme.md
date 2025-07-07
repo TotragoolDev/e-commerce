@@ -10,3 +10,5 @@ docker-compose up -d
 npx prisma generate
 npx prisma format
 npx prisma db push
+
+npm install bcryptjs jsonwebtoken express-validator
