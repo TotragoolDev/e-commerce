@@ -5,6 +5,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+// เพิ่มหลัง require statements
+const { prisma, connectDatabase, getDatabaseStats } = require('./src/config/database');
 
 const app = express();
 
@@ -210,6 +212,26 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Database Test Endpoint
+app.get('/api/db-test', async (req, res) => {
+  try {
+    const stats = await getDatabaseStats();
+    
+    res.json({
+      message: 'Database connection test',
+      database: stats,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Database test failed',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Global Error Handler
 app.use((err, req, res, next) => {
   // Log error
@@ -243,17 +265,34 @@ app.use((err, req, res, next) => {
 // SERVER STARTUP
 // =============================================================================
 
+// แทนที่ app.listen เดิม
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log('\n🚀 =================================');
-  console.log(`🚀 Backend Server: http://localhost:${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🎯 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
-  console.log(`💊 Health Check: http://localhost:${PORT}/health`);
-  console.log(`🔗 API Info: http://localhost:${PORT}/api`);
-  console.log(`🧪 Test: http://localhost:${PORT}/api/test`);
-  console.log('🚀 =================================\n');
-});
+async function startServer() {
+  try {
+    // เชื่อมต่อฐานข้อมูลก่อน
+    await connectDatabase();
+    
+    // เริ่ม HTTP server
+    app.listen(PORT, () => {
+      console.log('\n🚀 =================================');
+      console.log(`🚀 Backend Server: http://localhost:${PORT}`);
+      console.log(`🗄️ Database: PostgreSQL (Connected)`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🎯 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+      console.log(`💊 Health Check: http://localhost:${PORT}/health`);
+      console.log(`🔗 API Info: http://localhost:${PORT}/api`);
+      console.log(`🧪 Test: http://localhost:${PORT}/api/test`);
+      console.log(`🗄️ DB Test: http://localhost:${PORT}/api/db-test`);
+      console.log('🚀 =================================\n');
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// เริ่ม server
+startServer();
 
 module.exports = app;
