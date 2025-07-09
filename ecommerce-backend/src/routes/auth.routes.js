@@ -99,7 +99,7 @@ router.get('/admin/stats',
 // =============================================================================
 
 // API Documentation endpoint
-router.get('/', (req, res) => {
+router.get('/', (res) => {
   res.json({
     message: 'Authentication API',
     version: '1.0.0',
