@@ -199,4 +199,115 @@ class UserService {
     }
   }
 
+  // ============ ACCOUNT SETTINGS ============
+
+  /**
+   * Get account settings for user
+   * @param {number} userId - User ID
+   * @returns {Promise<Object>} Account settings
+   */
+  async getAccountSettings(userId) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          emailVerified: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Add computed fields
+      const settings = {
+        ...user,
+        fullName: `${user.firstName} ${user.lastName}`,
+        memberSince: user.createdAt,
+        lastUpdated: user.updatedAt
+      };
+
+      return settings;
+    } catch (error) {
+      console.error('Get account settings error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update account settings
+   * @param {number} userId - User ID
+   * @param {Object} settingsData - Settings data
+   * @returns {Promise<Object>} Updated settings
+   */
+  async updateAccountSettings(userId, settingData) {
+    try {
+      const {email, firstName, lastname, phone} = settingsData;
+
+      // Check if email is being changed and if it's already in use
+      if (email){
+        const existingUser = await prisma.user.findFirst({
+          where: {
+            email,
+            NOT: { id: userId }
+          }
+        });
+        if (existingUser) {
+          throw new Error('Email already in use');
+        }
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          ...(email && { email }),
+          ...(firstName && { firstName }),
+          ...(lastName && { lastName }),
+          ...(phone && { phone })
+        },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          emailVerified: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      });
+
+      return updatedUser;
+    } catch (error) {
+      console.error('Update account settings error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Deactivate user account
+   * @param {number} userId - User ID
+   */
+  async deactivateAccount(userId) {
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { isActive: false }
+      });
+    } catch (error) {
+      console.error('Deactivate account error:', error);
+      throw error;
+    }
+  }
 }
